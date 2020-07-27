@@ -14,7 +14,7 @@ matrix:
     os: osx
     osx_image: xcode11.2
     script:
-    - make -j 4 PTR_SIZE="-m64" WANT_JIT=1 HAVE_COMPOSITION=1
+    - make -j 4 PTR_SIZE="-m64" WANT_JIT=1 HAVE_COMPOSITION=1 MACOSX_DEPLOYMENT_TARGET=10.14
     - zip lutro-OSX-x86_64.zip lutro_libretro.dylib
   - name: Windows x86_64
     os: windows
