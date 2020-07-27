@@ -8,20 +8,20 @@ matrix:
   - name: Linux x86_64
     dist: bionic
     script:
-    - make -j 4
+    - make -j 4 WANT_JIT=1 HAVE_COMPOSITION=1
     - zip lutro-Linux-x86_64.zip lutro_libretro.so
   - name: OSX x86_64
     os: osx
     osx_image: xcode11.2
     script:
-    - make -j 4
+    - make -j 4 WANT_JIT=1 HAVE_COMPOSITION=1
     - zip lutro-OSX-x86_64.zip lutro_libretro.dylib
   - name: Windows x86_64
     os: windows
     before_install:
     - choco install make --ignore-checksums
     script:
-    - make platform=win -j 4
+    - make platform=win -j 4 WANT_JIT=1 HAVE_COMPOSITION=1
     - 7z a lutro-Windows-x86_64.zip lutro_libretro.dll
 deploy:
   skip_cleanup: true
