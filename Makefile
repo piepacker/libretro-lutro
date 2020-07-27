@@ -335,7 +335,7 @@ deps/lua/src/liblua.a:
 	$(MAKE) -C deps/lua/src CC="$(CC) $(LUADEFINES)" CXX="$(CXX)" MYCFLAGS="$(LUA_MYCFLAGS) -w -g $(fpic)" MYLDFLAGS="$(LDFLAGS) $(fpic)" SYSCFLAGS="$(LUA_SYSCFLAGS) $(fpic)" liblua.a
 deps/luajit/src/libluajit.a:
 	$(MAKE) -C deps/luajit/src BUILDMODE=static CFLAGS="$(LUA_MYCFLAGS) $(fpic)" Q= LDFLAGS="$(fpic)"
-	$(MAKE) -C deps/luajit/src HOST_CC="$(CC)" $(PTR_SIZE)" BUILDMODE=static CFLAGS="$(LUA_MYCFLAGS) $(fpic)" Q= LDFLAGS="$(fpic)"
+	$(MAKE) -C deps/luajit/src HOST_CC="$(CC)" "$(PTR_SIZE)" BUILDMODE=static CFLAGS="$(LUA_MYCFLAGS) $(fpic)" Q= LDFLAGS="$(fpic)"
 
 obj/%.o: %.c
 	@mkdir -p $(dir $@)
