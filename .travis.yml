@@ -21,7 +21,7 @@ matrix:
     before_install:
     - choco install make --ignore-checksums
     script:
-    - make platform=win -j 4 WANT_JIT=1 HAVE_COMPOSITION=1
+    - make platform=win -j 4 WANT_JIT=1 HAVE_COMPOSITION=1 HOST_SYS=MINGW
     - 7z a lutro-Windows-x86_64.zip lutro_libretro.dll
 deploy:
   skip_cleanup: true
