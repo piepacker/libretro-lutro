@@ -6,7 +6,6 @@
 #include "audio.h"
 
 #define CHANNELS 2
-float floatData[AUDIO_FRAMES * CHANNELS];
 
 //
 bool decoder_initOgg(OggData *data, char *filename)
@@ -53,8 +52,9 @@ bool decoder_seekStart(OggData *data)
 	return ov_time_seek(&data->vf, 0.0) == 0;
 }
 
-//
-bool decoder_decodeOgg(OggData *data, float *buffer, float volume, bool loop)
+// decoded data is mixed (added) into the presaturated mixer buffer.
+// the buffer must be manually cleared to zero for non-mixing (raw) use cases.
+bool decoder_decodeOgg(OggData *data, mixer_presaturate_t *buffer, float volume, bool loop)
 {
 	//printf("decoder_decodeOgg\n");
 
@@ -62,7 +62,7 @@ bool decoder_decodeOgg(OggData *data, float *buffer, float volume, bool loop)
 	size_t rendered = 0;
 	bool finished = false;
 
-	float *dst = floatData;
+	float *dst = buffer;
 
 	while (frames)
 	{
@@ -96,16 +96,16 @@ bool decoder_decodeOgg(OggData *data, float *buffer, float volume, bool loop)
 		{
 			for (long i = 0; i < ret; i++)
 			{
-				dst[i * CHANNELS + 0] = pcm[0][i];
-				dst[i * CHANNELS + 1] = pcm[1][i];
+				dst[i * CHANNELS + 0] += pcm[0][i] * volume;
+				dst[i * CHANNELS + 1] += pcm[1][i] * volume;
 			}
 		}
 		else
 		{
 			for (long i = 0; i < ret; i++)
 			{
-				dst[i * CHANNELS + 0] = pcm[0][i];
-				dst[i * CHANNELS + 1] = pcm[0][i];
+				dst[i * CHANNELS + 0] += pcm[0][i];
+				dst[i * CHANNELS + 1] += pcm[0][i];
 			}
 		}
 
@@ -114,6 +114,5 @@ bool decoder_decodeOgg(OggData *data, float *buffer, float volume, bool loop)
 		rendered += ret;
 	}
 	
-	audio_mix_volume(buffer, floatData, volume, rendered * CHANNELS);
 	return finished;
 }
