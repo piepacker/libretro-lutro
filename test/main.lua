@@ -5,7 +5,7 @@ local availableStates = {
 	"joystick/isDown",
 	"graphics/rectangle",
 	"graphics/line",
-	"audio/play",
+	"audio/play-newSource",
 	"joystick/getJoystickCount",
 	"window/close"
 }
