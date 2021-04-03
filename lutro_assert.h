@@ -25,9 +25,15 @@
 
 extern int _lutro_assertf_internal(int ignorable, const char *fmt, ...);
 
-// ignorable: 1=prompt for ignore, 2=forced-ignore (log only)
-#define _base_assert(ignorable, cond)            ((void)((cond) || (_lutro_assertf_internal(ignorable, __FILE__ "(%d):assertion `%s` failed.\n",         __LINE__, #cond                 ) && (ignorable > 1 || (abort(), 0)))))
-#define _base_assertf(ignorable, cond, msg, ...) ((void)((cond) || (_lutro_assertf_internal(ignorable, __FILE__ "(%d):assertion `%s` failed. " msg "\n", __LINE__, #cond , ## __VA_ARGS__) && (ignorable > 1 || (abort(), 0)))))
+#define _base_hard_error()                            ((void)(          ((_lutro_assertf_internal(0, __FILE__ "(%d):unrecoverable error"         "\n", __LINE__                        ),1) && (           (abort(), 0)))))
+#define _base_hard_errorf(msg, ...)                   ((void)(          ((_lutro_assertf_internal(0, __FILE__ "(%d):unrecoverable error "    msg "\n", __LINE__,         ## __VA_ARGS__),1) && (           (abort(), 0)))))
+#define _base_soft_error(doAbort)                     ((void)(          ((_lutro_assertf_internal(1, __FILE__ "(%d):error"                       "\n", __LINE__                        )  ) && (doAbort && (abort(), 0)))))
+#define _base_soft_errorf(doAbort, msg, ...)          ((void)(          ((_lutro_assertf_internal(1, __FILE__ "(%d):error "                  msg "\n", __LINE__,         ## __VA_ARGS__)  ) && (doAbort && (abort(), 0)))))
+
+#define _base_hard_assert(cond)                       ((void)((cond) || ((_lutro_assertf_internal(0, __FILE__ "(%d):assertion `%s` failed."      "\n", __LINE__, #cond                 ),1) && (           (abort(), 0)))))
+#define _base_hard_assertf(cond, msg, ...)            ((void)((cond) || ((_lutro_assertf_internal(0, __FILE__ "(%d):assertion `%s` failed. " msg "\n", __LINE__, #cond , ## __VA_ARGS__),1) && (           (abort(), 0)))))
+#define _base_soft_assert(doAbort, cond)              ((void)((cond) || ((_lutro_assertf_internal(1, __FILE__ "(%d):assertion `%s` failed."      "\n", __LINE__, #cond                 )  ) && (doAbort && (abort(), 0)))))
+#define _base_soft_assertf(doAbort, cond, msg, ...)   ((void)((cond) || ((_lutro_assertf_internal(1, __FILE__ "(%d):assertion `%s` failed. " msg "\n", __LINE__, #cond , ## __VA_ARGS__)  ) && (doAbort && (abort(), 0)))))
 
 // Soft vs Hard Assertions
 //  - Soft assertions are ignorable: a message is displayed to the user and a crash report can optionally be
@@ -35,10 +41,10 @@ extern int _lutro_assertf_internal(int ignorable, const char *fmt, ...);
 //    ruunning, tho whatever action that asserted will not be applied (typically meaning some audio or visual
 //    effect will not function).
 // 
-//  - Hard Assertions are not ignorable. They are no-return when condition failed, and will end in crash reports
-//    and process aborted. These type of asserts should be used sparingly, as they prevent the gameplay content
-//    creators from fixing and hit-reloading lua. (the main intended use would be bounds checking or null
-//    pointer checks, things that will surely crash if failed)
+//  - Hard Assertions (assumptions) are not ignorable. They are no-return when condition failed, and will end
+//    in crash reports and process aborted. These type of asserts should be used sparingly, as they prevent the
+//    gameplay content creators from fixing and hit-reloading lua. These are demoted to compiler assumption
+//    directives in Player builds. Intended use would be bounds checking or null pointer checks.
 
 // play_assert is always enabled even on Player (standalone) builds of the engine. The majority of assertions
 // should assume play_assert first and then select tool_assert or dbg_assert only if performance profiling or
@@ -48,16 +54,15 @@ extern int _lutro_assertf_internal(int ignorable, const char *fmt, ...);
 //   - play_assert on Tool/Debug builds behaves the same as tool_assert.
 
 #if LUTRO_ENABLE_PLAYER_ASSERT && LUTRO_ENABLE_TOOL_ASSERT
-#  define play_assert(cond)                  _base_assert (1, cond)
-#  define play_assertf(cond, msg, ...)       _base_assertf(1, cond, msg, ## __VA_ARGS__)
-#  define hard_assert(cond)                  _base_assert (0, cond)
-#  define hard_assertf(cond, msg, ...)       _base_assertf(0, cond, msg, ## __VA_ARGS__)
+#  define play_assert(cond)                  _base_soft_assert (1, cond)
+#  define play_assertf(cond, msg, ...)       _base_soft_assertf(1, cond, msg, ## __VA_ARGS__)
+#  define hard_assert(cond)                  _base_hard_assert (   cond)
+#  define hard_assertf(cond, msg, ...)       _base_hard_assertf(   cond, msg, ## __VA_ARGS__)
 #elif LUTRO_ENABLE_PLAYER_ASSERT
-// ignorable=2 means: do not abort, log only.. yea its a little hurried.
-#  define play_assert(cond)                  _base_assert (2, cond)
-#  define play_assertf(cond, msg, ...)       _base_assertf(2, cond, msg, ## __VA_ARGS__)
-#  define hard_assert(cond)                  _base_assert (0, cond)
-#  define hard_assertf(cond, msg, ...)       _base_assertf(0, cond, msg, ## __VA_ARGS__)
+#  define play_assert(cond)                  _base_soft_assert (0, cond)
+#  define play_assertf(cond, msg, ...)       _base_soft_assertf(0, cond, msg, ## __VA_ARGS__)
+#  define hard_assert(cond)                  _base_hard_assert (   cond)
+#  define hard_assertf(cond, msg, ...)       _base_hard_assertf(   cond, msg, ## __VA_ARGS__)
 #else
 #  define play_assert(cond)             ((void)(0 && (cond)))
 #  define play_assertf(cond, msg, ...)  ((void)(0 && (cond)))
@@ -76,8 +81,10 @@ extern int _lutro_assertf_internal(int ignorable, const char *fmt, ...);
 // assertions check for is such that we really want to check for them in Player builds. But also not
 // against re-evaluating and adding hard versions if we discover the need for them later on.
 #if LUTRO_ENABLE_TOOL_ASSERT
-#  define tool_assert(cond)             _base_assert(1, cond)
-#  define tool_assertf(cond, msg, ...)  _base_assertf(1, cond, msg, ## __VA_ARGS__)
+#  define tool_error()                  _base_soft_error  (1)
+#  define tool_errorf(msg, ...)         _base_soft_errorf (1, msg, ## __VA_ARGS__)
+#  define tool_assert(cond)             _base_soft_assert (1, cond)
+#  define tool_assertf(cond, msg, ...)  _base_soft_assertf(1, cond, msg, ## __VA_ARGS__)
 #else
 #  define tool_assert(cond)             ((void)(0 && (cond)))
 #  define tool_assertf(cond, msg, ...)  ((void)(0 && (cond)))
@@ -87,16 +94,22 @@ extern int _lutro_assertf_internal(int ignorable, const char *fmt, ...);
 // the overhead of the assertion check should be avoided. Use of this macro should be limited only to specific
 // situations where a tool_assert is actually observed to be a performance problem, or when it's plainly
 // obvious that it might do so (a good example would be assertions within the audio mixer loop).
+//
+// dbg_assume is an alias for dbg_hard_assert. It might be nice to decide on one or the other later.
 #if LUTRO_ENABLE_DBG_ASSERT
-#  define dbg_assert(cond)                  _base_assert(1, cond)
-#  define dbg_assertf(cond, msg, ...)       _base_assertf(1, cond, msg, ## __VA_ARGS__)
-#  define dbg_hard_assert(cond)             _base_assert(0, cond)
-#  define dbg_hard_assertf(cond, msg, ...)  _base_assertf(0, cond, msg, ## __VA_ARGS__)
+#  define dbg_assert(cond)                  _base_soft_assert (1, cond)
+#  define dbg_assertf(cond, msg, ...)       _base_soft_assertf(1, cond, msg, ## __VA_ARGS__)
+#  define dbg_assume(cond)                  _base_hard_assert (   cond)
+#  define dbg_assumef(cond, msg, ...)       _base_hard_assertf(   cond, msg, ## __VA_ARGS__)
+#  define dbg_hard_assert(cond)             _base_hard_assert (   cond)
+#  define dbg_hard_assertf(cond, msg, ...)  _base_hard_assertf(   cond, msg, ## __VA_ARGS__)
 #else
 #  define dbg_assert(cond)                  ((void)(0 && (cond)))
 #  define dbg_assertf(cond, msg, ...)       ((void)(0 && (cond)))
-#  define dbg_hard_assert(cond)             ((void)(0 && (cond)))
-#  define dbg_hard_assertf(cond, msg, ...)  ((void)(0 && (cond)))
+#  define dbg_assume(cond)                  (__assume(cond))
+#  define dbg_assumef(cond, msg, ...)       (__assume(cond))
+#  define dbg_hard_assert(cond)             (__assume(cond))
+#  define dbg_hard_assertf(cond, msg, ...)  (__assume(cond))
 #endif
 
 #endif
