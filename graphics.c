@@ -82,13 +82,13 @@ void lutro_graphics_reinit(lua_State *L)
       return;
 
    if (fbbmp)
-      free(fbbmp->data);
+      lutro_free(fbbmp->data);
    else
-      fbbmp = (bitmap_t*)calloc(1, sizeof(bitmap_t));
+      fbbmp = (bitmap_t*)lutro_calloc(1, sizeof(bitmap_t));
 
    settings.pitch_pixels = settings.width;
    settings.pitch        = settings.pitch_pixels * sizeof(uint32_t);
-   settings.framebuffer  = (uint32_t*)calloc(1, settings.pitch * settings.height);
+   settings.framebuffer  = (uint32_t*)lutro_calloc(1, settings.pitch * settings.height);
 
    fbbmp->data   = settings.framebuffer;
    fbbmp->height = settings.height;
@@ -160,7 +160,7 @@ static int img_gc(lua_State *L)
    }
 
    /* FIXME */
-   /* free((void*)self); */
+   /* lutro_free((void*)self); */
 
    return 0;
 }
@@ -329,10 +329,10 @@ static int gfx_newCanvas(lua_State *L)
 
    gfx_Canvas* canvas = new_canvas(L);
 
-   bitmap_t* bmp = (bitmap_t*)calloc(1, sizeof(bitmap_t));
+   bitmap_t* bmp = (bitmap_t*)lutro_calloc(1, sizeof(bitmap_t));
 
    int pitch = w * sizeof(uint32_t);
-   uint32_t *framebuffer  = (uint32_t*)calloc(1, pitch * h);
+   uint32_t *framebuffer  = (uint32_t*)lutro_calloc(1, pitch * h);
 
    bmp->data   = framebuffer;
    bmp->height = h;
@@ -465,7 +465,7 @@ static int gfx_newImageFont(lua_State *L)
 
    push_font(L, font);
 
-   free(font);
+   lutro_free(font);
 
    return 1;
 }
@@ -679,7 +679,7 @@ static int gfx_polygon(lua_State *L)
 
    canvas = get_canvas_ref(L, cur_canv);
 
-   int* points = calloc(n-1, sizeof(int));
+   int* points = lutro_calloc(n-1, sizeof(int));
    for (int i = 2; i <= n; ++i)
    {
       points[i-2] = luaL_checknumber(L, i);
@@ -688,16 +688,16 @@ static int gfx_polygon(lua_State *L)
    if (!strcmp(mode, "fill"))
    {
       pntr_fill_poly(canvas, points, n-1);
-      free(points);
+      lutro_free(points);
    }
    else if (!strcmp(mode, "line"))
    {
       pntr_strike_poly(canvas, points, n-1);
-      free(points);
+      lutro_free(points);
    }
    else
    {
-      free(points);
+      lutro_free(points);
       return luaL_error(L, "lutro.graphics.polygon's available modes are : fill or line", n);
    }
 
