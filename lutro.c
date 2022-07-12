@@ -827,3 +827,40 @@ void lutro_assetPath_init(AssetPathInfo* dest, const char* path)
    for(int i = 0; dest->ext[i]; i++)
       dest->ext[i] = tolower((uint8_t)dest->ext[i]);
 }
+
+void *lutro_malloc_internal(size_t size, const char* debug, int line)
+{
+    void *a = malloc(size);
+#if TRACE_ALLOCATION
+    fprintf(stderr,"TRACE ALLOC:%p:malloc:%s:%d\n", a, debug, line);
+#endif
+    return a;
+}
+
+void lutro_free_internal(void *ptr, const char* debug, int line)
+{
+#if TRACE_ALLOCATION
+    // Don't trace nop
+    if (ptr)
+        fprintf(stderr,"TRACE ALLOC:%p:free:%s:%d\n", ptr, debug, line);
+#endif
+    free(ptr);
+}
+
+void *lutro_calloc_internal(size_t nmemb, size_t size, const char* debug, int line)
+{
+    void *a = calloc(nmemb, size);
+#if TRACE_ALLOCATION
+    fprintf(stderr,"TRACE ALLOC:%p:calloc:%s:%d\n", a, debug, line);
+#endif
+    return a;
+}
+
+void *lutro_realloc_internal(void *ptr, size_t size, const char* debug, int line)
+{
+    void *a = realloc(ptr, size);
+#if TRACE_ALLOCATION
+    fprintf(stderr,"TRACE ALLOC:%p:realloc from %p:%s:%d\n", a, ptr, debug, line);
+#endif
+    return a;
+}

@@ -8,6 +8,7 @@
 #define STBI_NO_LINEAR
 #define STBI_NO_HDR
 #define STBI_NO_THREAD_LOCALS
+#include "lutro.h"
 #include "stb/stb_image.h"
 
 /**
