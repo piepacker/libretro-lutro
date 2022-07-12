@@ -169,6 +169,8 @@ int fs_load(lua_State *L)
 
    int status = luaL_loadbuffer(L, string, fsize, path);
 
+   lutro_free(string);
+
    switch (status)
    {
    case LUA_ERRMEM:
