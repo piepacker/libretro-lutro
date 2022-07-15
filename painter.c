@@ -531,8 +531,10 @@ font_t *font_load_filename(const char *filename, const char *characters, unsigne
 
    flags &= ~FONT_FREETYPE;
 
+   // This code is a nop, font was 0 init-ed in the calloc above
+   // Side note: free of NULL is legal
    if (font->atlas.data)
-      free(font->atlas.data); // Allocation is done in stb lib, don't trace it in lutro
+      free(font->atlas.data);
 
    font->pxsize = 0;
    font->flags  = flags;
@@ -563,8 +565,10 @@ font_t *font_load_bitmap(const bitmap_t *atlas, const char *characters, unsigned
 
    flags &= ~FONT_FREETYPE;
 
+   // This code is a nop, font was 0 init-ed in the calloc above
+   // Side note: free of NULL is legal
    if (font->atlas.data)
-      free(font->atlas.data); // Allocation is done in stb lib, don't trace it in lutro
+      free(font->atlas.data);
 
    font->pxsize = 0;
    font->flags  = flags;
