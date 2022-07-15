@@ -313,7 +313,14 @@ static int canvas_type(lua_State *L)
 static int canvas_gc(lua_State *L)
 {
    gfx_Canvas* self = get_canvas_ndx(L, 1);
-   (void)self;
+   if (self->target) {
+       if (self->target->data) {
+           lutro_free(self->target->data);
+           self->target->data = NULL;
+       }
+       lutro_free(self->target);
+       self->target = NULL;
+   }
    return 0;
 }
 
