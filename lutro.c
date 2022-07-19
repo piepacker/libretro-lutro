@@ -50,6 +50,7 @@
 static lua_State *L;
 static int16_t input_cache[16];
 int g_lua_stack = 0;
+static int32_t allocation_count = 0;
 
 lutro_settings_t settings = {
    .width = 320,
@@ -324,6 +325,8 @@ void lutro_deinit()
 
    lutro_audio_deinit();
    lutro_filesystem_deinit();
+
+   lutro_print_allocation();
 }
 
 void lutro_mixer_render(int16_t* buffer)
@@ -832,7 +835,12 @@ void *lutro_malloc_internal(size_t size, const char* debug, int line)
 {
     void *a = malloc(size);
 #if TRACE_ALLOCATION
-    fprintf(stderr,"TRACE ALLOC:%p:malloc:%s:%d\n", a, debug, line);
+    if (a) {
+        fprintf(stderr,"TRACE ALLOC:%p:malloc:%s:%d\n", a, debug, line);
+        allocation_count++;
+    } else {
+        fprintf(stderr,"TRACE ALLOC:failure:malloc:%s:%d\n", debug, line);
+    }
 #endif
     return a;
 }
@@ -841,8 +849,10 @@ void lutro_free_internal(void *ptr, const char* debug, int line)
 {
 #if TRACE_ALLOCATION
     // Don't trace nop
-    if (ptr)
+    if (ptr) {
         fprintf(stderr,"TRACE ALLOC:%p:free:%s:%d\n", ptr, debug, line);
+        allocation_count--;
+    }
 #endif
     free(ptr);
 }
@@ -851,7 +861,12 @@ void *lutro_calloc_internal(size_t nmemb, size_t size, const char* debug, int li
 {
     void *a = calloc(nmemb, size);
 #if TRACE_ALLOCATION
-    fprintf(stderr,"TRACE ALLOC:%p:calloc:%s:%d\n", a, debug, line);
+    if (a) {
+        fprintf(stderr,"TRACE ALLOC:%p:calloc:%s:%d\n", a, debug, line);
+        allocation_count++;
+    } else {
+        fprintf(stderr,"TRACE ALLOC:failure:calloc:%s:%d\n", debug, line);
+    }
 #endif
     return a;
 }
@@ -860,7 +875,32 @@ void *lutro_realloc_internal(void *ptr, size_t size, const char* debug, int line
 {
     void *a = realloc(ptr, size);
 #if TRACE_ALLOCATION
-    fprintf(stderr,"TRACE ALLOC:%p:realloc from %p:%s:%d\n", a, ptr, debug, line);
+    if (a) {
+        if (ptr == NULL) {
+            // If original pointer is null, realloc behave as a malloc
+            fprintf(stderr,"TRACE ALLOC:%p:realloc (malloc):%s:%d\n", a, debug, line);
+            // Note even if size is 0, realloc can return a pointer suitable to
+            // be passed to free
+            allocation_count++;
+        } else {
+            fprintf(stderr,"TRACE ALLOC:%p:realloc (move from %p):%s:%d\n", a, ptr, debug, line);
+        }
+    } else {
+        // Either realloc fail, or it released the memory
+        if (ptr != NULL && size == 0) {
+            // If size is 0, realloc behave as a free
+            fprintf(stderr,"TRACE ALLOC:null:realloc (free %p):%s:%d\n", ptr, debug, line);
+            allocation_count--;
+        } else {
+            fprintf(stderr,"TRACE ALLOC:failure:realloc (%p):%s:%d\n", ptr, debug, line);
+        }
+    }
 #endif
     return a;
+}
+
+void lutro_print_allocation() {
+#if TRACE_ALLOCATION
+    fprintf(stderr,"TRACE ALLOC:total pending allocations:%d\n", allocation_count);
+#endif
 }
