@@ -7,7 +7,7 @@
 #include "lutro.h"
 
 #define NB_JOYSTICKS 8
-#define NB_BUTTONS 14
+#define NB_BUTTONS 16
 static int16_t joystick_cache[NB_JOYSTICKS][NB_BUTTONS];
 
 const struct joystick_int_const_map joystick_key_enum[17] = {
