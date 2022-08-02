@@ -627,12 +627,16 @@ font_t *font_load_bitmap(const bitmap_t *atlas, const char *characters, unsigned
    font_t *font = lutro_calloc(1, sizeof(font_t));
    font->owner = lutro_calloc(1, sizeof(uint32_t));
 
+   // Deep copy data from atlas to give ownership. It also matches the behavior
+   // of font_load_filename that allocate a buffer for the atlas
+   font->atlas = *atlas;
+   font->atlas.data = lutro_malloc(atlas->pitch * atlas->height);
+   memcpy(font->atlas.data, atlas->data, atlas->pitch * atlas->height);
+
    flags &= ~FONT_FREETYPE;
 
    font->pxsize = 0;
    font->flags  = flags;
-
-   font->atlas = *atlas;
 
    uint32_t separator = font->atlas.data[0];
    int max_separators = MAX_FONT_CHAR;
