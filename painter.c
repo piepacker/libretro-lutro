@@ -408,7 +408,14 @@ void pntr_print(painter_t *p, int x, int y, const char *text, int limit)
       };
 
       size_t char_nb = utf8len(text);
-      uint32_t* utf32 = lutro_malloc(char_nb * 4);
+      uint32_t *utf32 = NULL;
+      // Avoid to call malloc for small string rendering
+      uint32_t buf[256];
+      if (char_nb < 256) {
+          utf32 = buf;
+      } else {
+          utf32 = lutro_malloc(char_nb * 4);
+      }
       utf8_conv_utf32(utf32, char_nb, text, strlen(text));
 
       for(int i = 0; i < char_nb; i++)
@@ -438,7 +445,8 @@ void pntr_print(painter_t *p, int x, int y, const char *text, int limit)
 		 }
       }
 
-      lutro_free(utf32);
+      if (utf32 != buf)
+          lutro_free(utf32);
    }
 }
 
@@ -459,7 +467,14 @@ int pntr_text_width(painter_t *p, const char *text)
       int glyph_x, glyph_width;
 
       size_t char_nb = utf8len(text);
-      uint32_t* utf32 = lutro_malloc(char_nb * 4);
+      uint32_t *utf32 = NULL;
+      // Avoid to call malloc for small string rendering
+      uint32_t buf[256];
+      if (char_nb < 256) {
+          utf32 = buf;
+      } else {
+          utf32 = lutro_malloc(char_nb * 4);
+      }
       utf8_conv_utf32(utf32, char_nb, text, strlen(text));
 
       for(int i = 0; i < char_nb; i++)
@@ -475,7 +490,8 @@ int pntr_text_width(painter_t *p, const char *text)
          width += glyph_width + 1;
       }
 
-      lutro_free(utf32);
+      if (utf32 != buf)
+          lutro_free(utf32);
    }
 
    return width;
