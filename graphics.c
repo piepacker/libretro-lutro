@@ -78,22 +78,21 @@ void lutro_graphics_reinit(lua_State *L)
 {
    gfx_Canvas *canvas;
 
-   if (fbbmp && fbbmp->width == settings.width && fbbmp->height == settings.height)
-      return;
+   if (!(fbbmp && fbbmp->width == settings.width && fbbmp->height == settings.height)) {
+       if (fbbmp)
+           lutro_free(fbbmp->data);
+       else
+           fbbmp = (bitmap_t*)lutro_calloc(1, sizeof(bitmap_t));
 
-   if (fbbmp)
-      lutro_free(fbbmp->data);
-   else
-      fbbmp = (bitmap_t*)lutro_calloc(1, sizeof(bitmap_t));
+       settings.pitch_pixels = settings.width;
+       settings.pitch        = settings.pitch_pixels * sizeof(uint32_t);
+       settings.framebuffer  = (uint32_t*)lutro_calloc(1, settings.pitch * settings.height);
 
-   settings.pitch_pixels = settings.width;
-   settings.pitch        = settings.pitch_pixels * sizeof(uint32_t);
-   settings.framebuffer  = (uint32_t*)lutro_calloc(1, settings.pitch * settings.height);
-
-   fbbmp->data   = settings.framebuffer;
-   fbbmp->height = settings.height;
-   fbbmp->width  = settings.width;
-   fbbmp->pitch  = settings.pitch;
+       fbbmp->data   = settings.framebuffer;
+       fbbmp->height = settings.height;
+       fbbmp->width  = settings.width;
+       fbbmp->pitch  = settings.pitch;
+   }
 
    canvas = (gfx_Canvas*)get_canvas_ref(L, cur_canv);
    canvas->target = fbbmp;
