@@ -54,6 +54,9 @@ void pntr_reset(painter_t *p)
 
 void pntr_clear(painter_t *p)
 {
+   if (!p->target->data)
+      return;
+
    uint32_t *begin = p->target->data;
    uint32_t *end   = p->target->data + p->target->height * (p->target->pitch >> 2);
    uint32_t color  = p->background;
@@ -75,6 +78,9 @@ void pntr_sanitize_clip(painter_t *p)
 
 void pntr_strike_line(painter_t *p, int x1, int y1, int x2, int y2)
 {
+   if (!p->target->data)
+      return;
+
    uint32_t color = p->foreground;
    if ((color & 0xff000000) == 0)
       return;
@@ -110,6 +116,9 @@ void pntr_strike_rect(painter_t *p, const rect_t *rect)
 
 void pntr_fill_rect(painter_t *p, const rect_t *rect)
 {
+   if (!p->target->data)
+      return;
+
    size_t row_size = p->target->pitch >> 2;
    uint32_t color = p->foreground;
    rect_t drect = {
@@ -209,6 +218,9 @@ void pntr_strike_poly(painter_t *p, const int *points, int nb_points)
 
 void pntr_fill_poly(painter_t *p, const int *points, int nb_points)
 {
+   if (!p->target->data)
+      return;
+
    if ((nb_points % 2) != 0)
       return;
 
@@ -278,6 +290,9 @@ void pntr_strike_ellipse(painter_t *p, int x, int y, int radius_x, int radius_y,
 
 void pntr_fill_ellipse(painter_t *p, int x, int y, int radius_x, int radius_y, int nb_segments)
 {
+   if (!p->target->data)
+      return;
+
    uint32_t color = p->foreground;
    if ((color & 0xff000000) == 0)
       return;
@@ -312,6 +327,9 @@ void pntr_fill_ellipse(painter_t *p, int x, int y, int radius_x, int radius_y, i
 
 void pntr_draw(painter_t *p, const bitmap_t *bmp, const rect_t *src_rect, const rect_t *dst_rect)
 {
+   if (!p->target->data)
+      return;
+
    rect_t srect = *src_rect, drect = *dst_rect;
 
    drect.x += p->trans->tx;
