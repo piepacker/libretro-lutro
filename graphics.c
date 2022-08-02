@@ -409,8 +409,19 @@ static int font_setFilter(lua_State *L)
 static int font_gc(lua_State *L)
 {
    font_t* self = (font_t*)luaL_checkudata(L, 1, "Font");
-   if (self && self->atlas.data) {
-       lutro_free(self->atlas.data);
+   // Release both atlas/owner data when owner reaches 0
+   if (self) {
+       if (self->owner) {
+           *self->owner = *self->owner - 1;
+           if (*self->owner == 0) {
+               if (self->atlas.data) {
+                   lutro_free(self->atlas.data);
+                   self->atlas.data = NULL;
+               }
+               lutro_free(self->owner);
+               self->owner = NULL;
+           }
+       }
    }
    return 0;
 }
@@ -419,6 +430,8 @@ static void push_font(lua_State *L, font_t *font)
 {
    font_t* self = (font_t*)lua_newuserdata(L, sizeof(font_t));
    memcpy(self, font, sizeof(font_t));
+   if (self->owner) // Increment the number of owner
+       *self->owner = *self->owner + 1;
 
    if (luaL_newmetatable(L, "Font") != 0)
    {

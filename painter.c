@@ -571,6 +571,7 @@ font_t *font_load_filename(const char *filename, const char *characters, unsigne
    // 2/ return font_load_bitmap(bitmap, characters, flags)
 
    font_t *font = lutro_calloc(1, sizeof(font_t));
+   font->owner = lutro_calloc(1, sizeof(uint32_t));
 
    flags &= ~FONT_FREETYPE;
 
@@ -606,6 +607,7 @@ font_t *font_load_filename(const char *filename, const char *characters, unsigne
 font_t *font_load_bitmap(const bitmap_t *atlas, const char *characters, unsigned flags)
 {
    font_t *font = lutro_calloc(1, sizeof(font_t));
+   font->owner = lutro_calloc(1, sizeof(uint32_t));
 
    flags &= ~FONT_FREETYPE;
 
