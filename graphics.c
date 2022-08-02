@@ -518,7 +518,14 @@ static int gfx_getFont(lua_State *L)
    if (n != 0)
       return luaL_error(L, "lutro.graphics.getFont requires 0 arguments, %d given.", n);
 
+
    canvas = get_canvas_ref(L, cur_canv);
+   if (canvas->font == NULL) {
+      // In theory, it must automatically create a default font for love 0.9.0
+      // Let's just return an error as not supported
+      return luaL_error(L, "lutro.graphics.getFont without user defined font isn't supported.");
+   }
+
    push_font(L, canvas->font);
 
    return 1;
